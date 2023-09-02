@@ -24,7 +24,6 @@ string GetFileContents(string file) {
 const regex directive1(R"/(\s*#\s*include\s*"([^"]*)"\s*)/");
 const regex directive2(R"/(\s*#\s*include\s*<([^>]*)>\s*)/");
 
-// напишите эту функцию
 bool ReplaceIncludesFiles(ifstream& in, ofstream& out, const path& in_file, const vector<path>& include_directories) {
     string line;
     int line_num = 0;
