@@ -25,7 +25,7 @@ const regex directive1(R"/(\s*#\s*include\s*"([^"]*)"\s*)/");
 const regex directive2(R"/(\s*#\s*include\s*<([^>]*)>\s*)/");
 
 // напишите эту функцию
-bool Preprocess(ifstream& in, ofstream& out, const path& in_file, const vector<path>& include_directories) {
+bool ReplaceIncludesFiles(ifstream& in, ofstream& out, const path& in_file, const vector<path>& include_directories) {
     string line;
     int line_num = 0;
     smatch m;
@@ -34,9 +34,11 @@ bool Preprocess(ifstream& in, ofstream& out, const path& in_file, const vector<p
         ++line_num;
         if (regex_match(line, m, directive1)) {
             path include_path = in_file.parent_path() / string(m[1]);
-            ifstream include_file(include_path);
+            ifstream include_file(in_file.parent_path() / string(m[1]));
             if (include_file) {
-                Preprocess(include_file, out, include_path, include_directories);
+                if (!ReplaceIncludesFiles(include_file, out, include_path, include_directories)) {
+                    return false;
+                }
                 continue;
             }
         } else if (!regex_match(line, m, directive2)) {
@@ -49,14 +51,13 @@ bool Preprocess(ifstream& in, ofstream& out, const path& in_file, const vector<p
         for (const path& include_path : include_directories) {
             ifstream include_file(path(include_path / string(m[1])));
             if (include_file) {
-                is_file_exist = true;
-                Preprocess(include_file, out, include_path, include_directories);
+                is_file_exist = ReplaceIncludesFiles(include_file, out, include_path, include_directories);
                 break;
             }
         }
-        
+
         if (!is_file_exist) {
-            cout << "unknown include file " << string(m[1]) << " at file " << in_file.string() << " at line " << line_num << endl;
+            cout << "Unknown include file " << string(m[1]) << " at file " << in_file.string() << " at line " << line_num << endl;
             return false;
         }
     }
@@ -66,15 +67,17 @@ bool Preprocess(ifstream& in, ofstream& out, const path& in_file, const vector<p
 bool Preprocess(const path& in_file, const path& out_file, const vector<path>& include_directories) {
     ifstream input(in_file);
     if (!input) {
+        cerr << "Could not open in_file: "s << in_file.string() << endl;
         return false;
     }
 
     ofstream output(out_file);
     if (!output) {
+        cerr << "Could not open out_file: "s << out_file.string() << endl;
         return false;
     }
 
-    return Preprocess(input, output, in_file, include_directories);
+    return ReplaceIncludesFiles(input, output, in_file, include_directories);
 }
 
 void Test() {
