@@ -51,7 +51,10 @@ bool ReplaceIncludesFiles(ifstream& in, ofstream& out, const path& in_file, cons
         for (const path& include_path : include_directories) {
             ifstream include_file(path(include_path / string(m[1])));
             if (include_file) {
-                is_file_exist = ReplaceIncludesFiles(include_file, out, include_path, include_directories);
+                is_file_exist = true;
+                if (!ReplaceIncludesFiles(include_file, out, include_path, include_directories)) {
+                    return false;
+                }
                 break;
             }
         }
