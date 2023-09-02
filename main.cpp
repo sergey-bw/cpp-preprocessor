@@ -34,7 +34,6 @@ bool Preprocess(ifstream& in, ofstream& out, const path& in_file, const vector<p
         ++line_num;
         if (regex_match(line, m, directive1)) {
             path include_path = in_file.parent_path() / string(m[1]);
-            include_path = include_path.lexically_normal();
             ifstream include_file(include_path);
             if (include_file) {
                 Preprocess(include_file, out, include_path, include_directories);
